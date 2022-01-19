@@ -22,7 +22,7 @@ parameter
 *@                 ASSIGN DEFAULT POLICIES
 *############################################################
 * By default no quota system
-map_q(r,c,q) = no;
+map_q(r,c,q) = yes;
 ren_target(q) = 0;
-min_sh_renewables(q) = 0;
+min_sh_renewables(q) = 0.7;
 

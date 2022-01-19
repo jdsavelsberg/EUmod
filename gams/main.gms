@@ -13,17 +13,17 @@ $offtext
 * directory
 
 * set modeltype here, not in scenario file
-$if not set modeltype $set modeltype QCP
+$if not set modeltype $set modeltype LP
 
 * switch for selecting if calibration factors should be used (yes / no)
 $if not set calibrated $set calibrated yes
 
 * set scenario (e.g. base for base case)
-$if not set scenario $set scenario base
+$if not set scenario $set scenario invest
 *base
 
 * switch for activating renewable investments (yes or no)
-$if not set renewable_investment $set renewable_investment no
+$if not set renewable_investment $set renewable_investment yes
 
 * datafile to use (here short version with 15 days)
 $if not set baseData $setglobal baseData "data_EU_2017_15"
@@ -60,6 +60,7 @@ $if not set adjustDemand $set adjustDemand no
 *@@ ------------------- FILE SETTINGS ------------------------
 $set scenfile "%scendir%%scenario%.gms"
 $set reportfile "%reportdir%%scenario%%modeltype%%suffix%.gdx"
+*does not exist
 
 *@@ ------------------ MODEL OPTIONS ------------------------
 * scaling of objective function
@@ -128,5 +129,8 @@ solvestatsBU("model") = cepeem_%modeltype%.modelstat;
 $include report_base.gms
 $include report_%modeltype%.gms
 
+
+
 *Dump everything to gdx
 execute_unload "%reportfile%";
+*execute '=gdx2xls "%reportfile%"';

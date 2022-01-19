@@ -41,9 +41,9 @@ parameter
 
 * report parameters regarding electricty prices
     r_price(c,t)                         report price [Euro per MWh]
+    r_hyd_price(c,t)                     report hydrogen price [Euro per MWh]
     r_price_avg(c)                       report yearly average price [Euro per MWh]
     r_price_avgII(c)                     report yearly average price based on demand function  [Euro per MWh]
-
     rd_price_avg(c,d)                    report daily price [Euro per MWh]
 
 * report parameters regarding transmission and trade
@@ -99,14 +99,14 @@ parameter
 $ondotl
 * hourly generation from conventionals, storage, and renewables
 r_generation(i,c,t)         = GEN(i,c,t)*dur_d(t) + eps;
-r_generation(s,c,t)         = S_GEN(s,c,t)*dur_d(t) + eps;
+r_generation(s,c,t)         = S_DISCHAR(s,c,t)*dur_d(t) + eps;
 r_generation(r,c,t)         = betaRen(r,c,t)*dur_d(t)*(renTotal(r,c) + RESGEN(r,c)) - CURT(r,c,t);
-r_generation("Pump",c,t)    = S_GEN("PumpOpen",c,t)*dur_d(t) + S_GEN("PumpClosed",c,t)*dur_d(t)
-                              - S_WIT("PumpOpen",c,t)*dur_d(t) - S_WIT("PumpClosed",c,t)*dur_d(t);
+r_generation("Pump",c,t)    = S_DISCHAR("PumpOpen",c,t)*dur_d(t) + S_DISCHAR("PumpClosed",c,t)*dur_d(t)
+                              - S_CHAR("PumpOpen",c,t)*dur_d(t) - S_CHAR("PumpClosed",c,t)*dur_d(t);
 r_generation("LostLoad",c,t)= SLACK(c,t)*dur_d(t) + eps;
 * hourly injection into storage
-r_storage_inj(s,c,t)        = S_WIT(s,c,t)*dur_d(t) + eps;
-r_storage_inj("Pump",c,t)   = (S_WIT("PumpOpen",c,t) + S_WIT("PumpClosed",c,t))*dur_d(t) + eps;
+r_storage_inj(s,c,t)        = S_CHAR(s,c,t)*dur_d(t) + eps;
+r_storage_inj("Pump",c,t)   = (S_CHAR("PumpOpen",c,t) + S_CHAR("PumpClosed",c,t))*dur_d(t) + eps;
 
 * total yearly generation for each country and technology
 r_generation_total(tech,c)  = sum(t, r_generation(tech,c,t))/10**6 + eps;
@@ -128,13 +128,13 @@ r_chp_gen_y(i,c)             = sum(t, r_chp_gen(i,c,t) * dur_d(t))/10**6 + eps;
 
 * daily generation from conventionals, storage, and renewables
 rd_generation(i,c,d)         = sum(map_t_d(t,d), GEN(i,c,t)) + eps;
-rd_generation(s,c,d)         = sum(map_t_d(t,d), S_GEN(s,c,t)) + eps;
+rd_generation(s,c,d)         = sum(map_t_d(t,d), S_DISCHAR(s,c,t)) + eps;
 rd_generation(r,c,d)         = sum(map_t_d(t,d), (betaRen(r,c,t)*(renTotal(r,c) + RESGEN(r,c)) - CURT(r,c,t)));
-*rd_generation("Pump",c,d)    = sum(map_t_d(t,d), (S_GEN("PumpOpen",c,t) + S_GEN("PumpClosed",c,t)));
+*rd_generation("Pump",c,d)    = sum(map_t_d(t,d), (S_DISCHAR("PumpOpen",c,t) + S_DISCHAR("PumpClosed",c,t)));
 
 * daily injection into storage
-rd_storage_inj(s,c,d)        = sum(map_t_d(t,d), S_WIT(s,c,t)) + eps;
-*rd_storage_inj("Pump",c,d)   = sum(map_t_d(t,d), (S_WIT("PumpOpen",c,t) + S_WIT("PumpClosed",c,t))) + eps;
+rd_storage_inj(s,c,d)        = sum(map_t_d(t,d), S_CHAR(s,c,t)) + eps;
+*rd_storage_inj("Pump",c,d)   = sum(map_t_d(t,d), (S_CHAR("PumpOpen",c,t) + S_CHAR("PumpClosed",c,t))) + eps;
 
 * daily curtailment of renewable generation per country and technology
 rd_curtailment(r,c,d)        = sum(map_t_d(t,d), CURT(r,c,t)) + eps;

@@ -26,8 +26,12 @@ set
    baseload(tech)           baseload technologies
    fixed(tech)              fixed feed-in technologies
    peak(tech)               peak load technologies
-   transport_tech           transport technologies
-   /ICE, EV/
+   transport_tech           transport technologies   /ICE, EV/
+   
+   hst                      hydrogen storage technologies /SaltCaverns/
+   hdem                     hydrogen demand sector
+   hdem_tech                technologies for hydrogen demand sectors with market clearing
+   inv                      technologies and infrastructure to be expanded by the model
 
 *  mappings
    mapTF(tech,f)            mapping technology to fuel
@@ -79,6 +83,22 @@ parameter
    cap_P(s,c)                     pump capacity of storage facilities [MW]
    avail(tech,c,t)                availability [%]
 
+*  costs of technologies/infrastructure expanded
+   cinv_exp(inv)                  investment costs for technologies and infrastructure expanded by the model [Euro per MW or MWh]
+   cinv_hydtradecap(c,cc)         hydrogen trade capacity investment cost [Euro per MW]
+   fixedcosts(inv)                annual fixed costs for technologies and infrastructure expanded by the model [Euro per MW or MWh]
+   
+*  hydrogen related - upload
+   hydst_lev_potential(c)         hydrogen storage maximum potential in country c [MWh]
+   h_demand_ex_annual(c)          annual exogenous hydrogen demand [MWh]
+   hdem_demand_annual(c,hdem)     sectors' annual demand [different unit for each hdem]
+   eta_hdem_tech(hdem,hdem_tech)  sectors' technologies conversion efficiencies [hdem unit output per MWh]
+   oandm_costs(hdem,hdem_tech)    sectors' technologies O&M costs [Euro per MWh consumed]
+
+*  hydrogen related - derived
+   h_demand_ex(c,t)               hourly exogenous hydrogen demand [MWh]
+   hdem_demand(hdem,c,t)          sectors' hourly demand [different unit for each hdem]
+   
 *  chp - upload
    chp_gen(i,c)                   yearly electricity generation by CHP plants by technology and country [MWh]
    heat_dem_up(t)                 hourly generation profile for heat-related demand [%]
@@ -122,16 +142,48 @@ parameter
    subsidy_res                    subsidy on renewable generation
 ;
 
+scalar
+   b_self_discharge_rate          battery self discharge rate [% per hour] /0.01/
+   hydst_self_discharge_rate      hydrogen storage self discharge rate [% per hour] /0.0001/
+;
+
+*#####################################################################
+*@            EXTRACTION OF NEW DATA FROM EXCEL
+*#####################################################################
+* load data
+
+$onEcho > %datadir%reading_new_hydrogen_data.txt
+dset=tech rng=NewtechSet!A1 rDim=1
+dset=hdem rng=DemtechSet!A2:A4 rDim=1
+dset=hdem_tech rng=DemtechSet!C2:C9 rDim=1
+dset=inv rng=InvCosts!A2:A8 rDim=1
+par=eta rng=EtaNew!A1:C500 rDim=2
+par=h_demand_ex_annual rng=HydDemand!D2:E26 rDim=1
+par=hdem_demand_annual rng=HydDemandSectors!A1:D26 cDim=1 rDim=1
+par=hydst_lev_potential rng=SaltCavernsPotential!A2 rDim=1
+par=eta_hdem_tech rng=DemtechSet!B2:D9 rDim=2
+par=oandm_costs rng=DemtechSet!B2:E9 rDim=2 ignoreColumns=D
+par=cinv_exp rng=InvCosts!A2:B8 rDim=1
+par=fixedcosts rng=InvCosts!A2:D8 rDim=1 ignoreColumns=B,C
+par=cinv_hydtradecap rng=HydTradeCosts!A1:C75 rDim=2
+$offEcho
+$call "gdxxrw %datadir%new_hydrogen_data.xlsx output=%datadir%new_hydrogen_data.gdx @%datadir%reading_new_hydrogen_data.txt";
+
+
 *#####################################################################
 *@                   DATA UPLOAD
 *#####################################################################
-* load data
+
+$gdxin %datadir%new_hydrogen_data.gdx
+$load tech
+$gdxin
+
 $gdxin %datadir%%baseData%.gdx
-$loaddc t d m c f tech i ra ro r s baseload fixed peak mapTF map_t_d map_t_m
+$loaddc t d m c f i ra ro r s baseload fixed peak mapTF map_t_d map_t_m
 $if not %scenario%=="tyndp" $loaddc eu
 $loaddc dur_d heat_dem_up
 $loaddc penalty curtPenalty epsilon  p_carb demand pRef
-$loaddc eta availUp availpeakUp cap cap_pump c_vom
+$loaddc availUp availpeakUp cap cap_pump c_vom
 $if %scenario% == "tyndp" $loaddc CCScapturerate
 $loaddc ntc
 $loaddc carb_coef pf pf_2
@@ -141,6 +193,15 @@ $loaddc reservoir_size_up reservoir_inflow_up reservoir_initial_up
 $loaddc chp_gen gen_annual gen_monthly
 $loaddc map_fuel_price_as map_om_cost_as
 $gdxin
+
+$gdxin %datadir%new_hydrogen_data.gdx
+$loaddc hdem hdem_tech inv
+$loaddc h_demand_ex_annual hdem_demand_annual
+$loaddc eta eta_hdem_tech
+$loaddc hydst_lev_potential
+$loaddc cinv_exp cinv_hydtradecap fixedcosts oandm_costs
+$gdxin
+
 
 *#####################################################################
 *@                        PARAMETER ASSIGNMENTS
@@ -307,6 +368,15 @@ cinv_0(r,c) = ren_cost_update(r,c,"cinv_0");
 cinv_1(r,c) = ren_cost_update(r,c,"cinv_1");
 $label skipCostScaling
 
+
+*---------------------------------------------------------------------
+*@@                HOURLY HYDROGEN DEMAND
+*---------------------------------------------------------------------
+
+h_demand_ex(c,t)=h_demand_ex_annual(c)/8760;
+hdem_demand(hdem,c,t)=hdem_demand_annual(c,hdem)/8760;
+
+
 $ontext
 *#####################################################################
 *                      SCALING OF VALUES
@@ -348,5 +418,4 @@ pRef_annual(c) = sum(t, pRef(c,t) *demand(c,t))/sum(t, demand(c,t));
 dem_b(c)$(pRef_annual(c) gt 0) = epsilon(c)*qRef(c)/pRef_annual(c);
 dem_b(c)$(pRef_annual(c) eq EPS) = -100000;
 dem_a(c) = qRef(c)*(1 - epsilon(c));
-
 

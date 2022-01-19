@@ -85,7 +85,7 @@ r_pSurplus(c)  = sum{t,
 *                   income
                     dur_d(t) * r_price(c,t) * (
                                      sum(i, GEN(i,c,t))
-                                   + sum(s, S_GEN(s,c,t) - S_WIT(s,c,t))
+                                   + sum(s, S_DISCHAR(s,c,t) - S_CHAR(s,c,t))
                                    + sum(r, betaRen(r,c,t) * (renTotal(r,c) + RESGEN(r,c)) - CURT(r,c,t)) )
                    }
 *                   Cost conventional fuel and startup

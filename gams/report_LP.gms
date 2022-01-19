@@ -30,6 +30,9 @@ r_share_renewables = sum((r,c), renTotal(r,c) + RESGEN(r,c) - sum(t, CURT(r,c,t)
 * hourly electricity prices
 r_price(c,t)      = mkt_G_LP.M(c,t)/dur_d(t) * (1/scale_obj);
 
+* hourly hydrogen prices
+r_hyd_price(c,t)      = mkt_HYD_LP.M(c,t)/dur_d(t) * (1/scale_obj);
+
 * yearly average electricity price
 r_price_avg(c)    = sum(t, demand(c,t) * r_price(c,t) * dur_d(t))/sum(t, demand(c,t) * dur_d(t));
 
