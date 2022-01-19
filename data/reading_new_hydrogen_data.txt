@@ -1,0 +1,13 @@
+dset=tech rng=NewtechSet!A1 rDim=1
+dset=hdem rng=DemtechSet!A2:A4 rDim=1
+dset=hdem_tech rng=DemtechSet!C2:C9 rDim=1
+dset=inv rng=InvCosts!A2:A8 rDim=1
+par=eta rng=EtaNew!A1:C500 rDim=2
+par=h_demand_ex_annual rng=HydDemand!D2:E26 rDim=1
+par=hdem_demand_annual rng=HydDemandSectors!A1:D26 cDim=1 rDim=1
+par=hydst_lev_potential rng=SaltCavernsPotential!A2 rDim=1
+par=eta_hdem_tech rng=DemtechSet!B2:D9 rDim=2
+par=oandm_costs rng=DemtechSet!B2:E9 rDim=2 ignoreColumns=D
+par=cinv_exp rng=InvCosts!A2:B8 rDim=1
+par=fixedcosts rng=InvCosts!A2:D8 rDim=1 ignoreColumns=B,C
+par=cinv_hydtradecap rng=HydTradeCosts!A1:C75 rDim=2
