@@ -1,0 +1,4 @@
+names no
+calcqcpduals=2
+threads=6
+epopt=1e-9
